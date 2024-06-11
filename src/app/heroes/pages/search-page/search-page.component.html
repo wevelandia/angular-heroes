@@ -1,1 +1,44 @@
-<p>search-page works!</p>
+<div class="flex flex-column p-2">
+
+  <h3>Buscador</h3>
+
+  <mat-form-field>
+    <mat-label>Buscador de Héroes</mat-label>
+
+    <input
+      type="text"
+      matInput
+      [formControl]="searchInput"
+      (input)="searchHero()"
+      [matAutocomplete]="auto"
+      />
+
+    <!-- La referencia local de #auto debe de apuntar al matAutocomplete del Input.  -->
+    <!-- optionSelected: Es un evento personalizado que crearon los de Angular Material.
+     y va a llamar un metodo personalizado llamado onSelectedOption definido en el componente. -->
+    <mat-autocomplete autoActiveFirstOption
+      #auto="matAutocomplete"
+      (optionSelected)="onSelectedOption( $event )"
+      >
+      <mat-option *ngFor="let hero of heroes" [value]="hero">
+        {{ hero.superhero }}
+      </mat-option>
+
+      <!-- Esto va a aparecer para cuando no hay coincidencias. -->
+      <mat-option
+        *ngIf="heroes.length === 0 && searchInput.value && searchInput.value.length > 0"
+        value="">
+        No se encontró nada con el término {{ searchInput.value }}
+      </mat-option>
+    </mat-autocomplete>
+  </mat-form-field>
+
+  <!-- {{ searchInput | json }} Asi queda de forma ciclica y no carga la pagina  -->
+  <!-- pristine: Me dice si el input aun continua con el mismo valor desde que se creo. -->
+   <!-- touched: Si ha sido tocado. -->
+  <!-- {{ searchInput.value | json }}
+  {{ searchInput.touched | json }}
+  {{ searchInput.pristine | json }} -->
+  {{ selectedHero | json }}
+
+</div>
