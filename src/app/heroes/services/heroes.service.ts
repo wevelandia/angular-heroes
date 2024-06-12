@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, of } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 import { Hero } from '../interfaces/hero.interface';
 import { environments } from '../../../environments/environments';
 
@@ -29,5 +29,28 @@ export class HeroesService {
   // Creamos nuestro autocomplete
   getSuggestions( query: string ): Observable<Hero[]> {
     return this.http.get<Hero[]>(`${ this.baseURL }/heroes?q=${ query }&_limit=6`);
+  }
+
+  // Creamos los tres CRUD faltantes
+  addHero( hero: Hero): Observable<Hero> {
+    // Este EndPoint se llama el metodo post y se le envia como params el hero.
+    return this.http.post<Hero>(`${ this.baseURL }/heroes`, hero);
+  }
+
+  updateHero( hero: Hero): Observable<Hero> {
+    // Este EndPoint actualiza parcialmente el objeto, los campos que le envie.
+    if ( !hero.id ) throw Error('Hero id is required');
+
+    return this.http.patch<Hero>(`${ this.baseURL }/heroes/${ hero.id }`, hero);
+  }
+
+  deleteHeroById( id: string): Observable<boolean> {
+    // Si cae en un error por ejemplo que se trata de borrar un Hero que no existe pasa por: catchError
+    // Si no presenta error pasa a map y me retorna un true.
+    return this.http.delete(`${ this.baseURL }/heroes/${ id }`)
+      .pipe(
+        map( resp => true ),
+        catchError( err => of(false) )
+      );
   }
 }

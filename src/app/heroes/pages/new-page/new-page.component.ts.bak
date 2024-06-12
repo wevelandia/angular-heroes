@@ -2,15 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog } from '@angular/material/dialog';
-
 import { Hero, Publisher } from '../../interfaces/hero.interface';
 import { HeroesService } from '../../services/heroes.service';
-import { filter, switchMap, tap } from 'rxjs';
-
-import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
-
+import { switchMap } from 'rxjs';
 
 
 @Component({
@@ -38,14 +32,10 @@ export class NewPageComponent implements OnInit {
     { id: 'Marvel Comics', desc: 'Marvel - Comics' },
   ];
 
-  // Angular Material ya viene configurado con los snackbars y se maneja el servicio MatSnackBar
-  // Inyectamos el servicio de MatDialog para el manejo de los mensajes.
   constructor(
     private heroesService: HeroesService,
     private activatedRoute: ActivatedRoute,
-    private router: Router,
-    private snackbar: MatSnackBar,
-    private dialog: MatDialog
+    private router: Router
   ) {}
 
   // Creamos un get para corregir el envio del form por el tipo de datos,
@@ -61,7 +51,7 @@ export class NewPageComponent implements OnInit {
 
     this.activatedRoute.params
       .pipe(
-        switchMap( ({ id }) => this.heroesService.getHeroById( id ) ),
+        switchMap( ({ id }) => this.heroesService.deleteHeroById( id ) ),
       ).subscribe( hero => {
         // Si no existe hero lo saco de esta pagina
         if ( !hero ) return this.router.navigateByUrl('/');
@@ -88,7 +78,6 @@ export class NewPageComponent implements OnInit {
       this.heroesService.updateHero( this.currentHero )
         .subscribe( hero => {
           // TODO: mostrar snackbar
-          this.showSnackBar(`${ hero.superhero } updated!`);
         });
 
     return;
@@ -99,57 +88,7 @@ export class NewPageComponent implements OnInit {
     this.heroesService.addHero( this.currentHero )
       .subscribe( hero => {
         // TODO: mostrar snackbar, y navegar a /heroes/edit/ hero.id
-        this.router.navigate( ['/heroes/edit', hero.id] );
-        this.showSnackBar(`${ hero.superhero } created!`);
       });
 
-  }
-
-  // Creo un metodo para mostrar el dialog
-  onDeleteHero() {
-    if ( !this.currentHero.id ) throw 'Hero id is required';
-
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: this.heroForm.value
-    });
-
-    // Se usa filter para saber si detenemos o no el proceso
-    // El primer filter es cuando doy click en OK.
-    // switchMap me retorna un boolean por ello el segundo filter, si es true pasa a la pagina de listado de heroes.
-    dialogRef.afterClosed()
-      .pipe(
-        filter( (result : boolean) => result ),
-        switchMap( () => this.heroesService.deleteHeroById( this.currentHero.id ) ),
-        filter( (wasDeleted : boolean) => wasDeleted )
-        // tap( wasDelete => console.log( {wasDelete} ) )
-      )
-      .subscribe(result => {
-        //console.log({result});
-        this.router.navigate( ['/heroes'] );
-      });
-
-    // Este código se mejora parano tener un subscribe dentro de otro subscribe.
-    /* dialogRef.afterClosed().subscribe(result => {
-      // console.log('The dialog was closed');
-      // console.log({ result }); // Este es el resultado del dialogo
-      // Si no tenemos un resultado del Dialog no hacemos nada
-      if ( !result ) return;
-
-      // Acá llamamos la eliminación del Hero
-      this.heroesService.deleteHeroById( this.currentHero.id )
-      .subscribe( wasDelete => {
-        if ( wasDelete )
-          this.router.navigate( ['/heroes'] );
-      });
-      // Después de eliminado lo pasamos a otra pantalla.
-
-    }); */
-  }
-
-  // Creamos un metodo para mostrar el snackbar
-  showSnackBar( message: string ): void {
-    this.snackbar.open( message, 'done', {
-      duration:  2500
-    } )
   }
 }
